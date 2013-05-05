@@ -1,11 +1,15 @@
 HTML_PATH = '/net/openwrt/mnt/sda1/shared/movies/'
 
-REQ_DATA = '''{"jsonrpc": "2.0",
-               "method": "VideoLibrary.GetMovies",
-               "params": {"properties" : ["originaltitle", "year", "file", "thumbnail"],
-                          "sort": {"order": "ascending", "method": "title"}
+REQ_MOVIES = '''{"jsonrpc": "2.0",
+                 "method": "VideoLibrary.GetMovies",
+                 "params": {"properties" : ["originaltitle", "year", "file", "thumbnail"],
+                            "sort": {"order": "ascending", "method": "title"}
                        },
-               "id": 1}'''
+                 "id": 1}'''
+
+REQ_DOWNLOAD = '''{"jsonrpc": "2.0",
+                   "method": "Files.PrepareDownload", "params": { "path": "%s" },
+                   "id": 2}'''
 
 html = '''<html>
   <head>
@@ -23,9 +27,9 @@ html = '''<html>
   </head>
   <body>
     % for movie in movies:
-    %   if 'file' in movie and movie['file']:
+    %   if 'path' in movie and movie['path']:
     <div class="movie">
-      <a href="${movie['file']}">
+      <a href="${movie['path']}">
       <div>
         <img src="https://raw.github.com/tuupola/jquery_lazyload/1.9.x/img/grey.gif" data-original="${movie['thumbnail']}" width="130" height="190">
       </div>
@@ -63,11 +67,15 @@ except ImportError:
         return response.json()
 
 print 'PROCESSING DATA... '
-movies = jsonrpc(REQ_DATA)['result']['movies']
+movies = jsonrpc(REQ_MOVIES)['result']['movies']
 for movie in movies:
     movie['thumbnail'] = urllib.unquote(movie['thumbnail'])
     if movie['thumbnail'].startswith('image://'):
         movie['thumbnail'] = movie['thumbnail'][8:]
+    try:
+        movie['path'] = jsonrpc(REQ_DOWNLOAD % movie['file'])['result']['details']['path']
+    except KeyError:
+        pass
 print 'FOUND %s MOVIES...' % len(movies)
 
 print 'RENDERING TEMPLATE...'
