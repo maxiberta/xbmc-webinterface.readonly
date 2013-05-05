@@ -42,25 +42,32 @@ html = '''<html>
 
 import os
 import urllib
+from mako.template import Template
+
 try:
     import xbmc
+    try:
+        import simplejson as json
+    except ImportError:
+        import json
+
     print 'EXECUTING JSONRPC QUERY VIA XBMC'
     response = xbmc.executeJSONRPC(REQ_DATA)
+    response_json = json.loads(response)
 except ImportError:
     import requests
     print 'EXECUTING JSONRPC QUERY VIA REQUESTS'
     response = requests.post('http://raspbmc.local/jsonrpc', data=REQ_DATA, headers={'content-type': 'application/json'})
-    movies = response.json()['result']['movies']
+    response_json = response.json()
 
-print 'FOUND %s MOVIES...' % len(movies)
 print 'PROCESSING DATA... '
+movies = response_json['result']['movies']
 for movie in movies:
     movie['thumbnail'] = urllib.unquote(movie['thumbnail'])
     if movie['thumbnail'].startswith('image://'):
         movie['thumbnail'] = movie['thumbnail'][8:]
+print 'FOUND %s MOVIES...' % len(movies)
 
-print 'LOADING MAKO...'
-from mako.template import Template
 print 'RENDERING TEMPLATE...'
 template = Template(html, output_encoding='utf-8', encoding_errors='replace')
 out = template.render(movies=movies)
