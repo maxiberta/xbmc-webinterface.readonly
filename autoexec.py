@@ -51,17 +51,19 @@ try:
     except ImportError:
         import json
 
-    print 'EXECUTING JSONRPC QUERY VIA XBMC'
-    response = xbmc.executeJSONRPC(REQ_DATA)
-    response_json = json.loads(response)
+    def jsonrpc(request):
+        print 'EXECUTING JSONRPC QUERY VIA XBMC'
+        response = xbmc.executeJSONRPC(request)
+        return json.loads(response)
 except ImportError:
     import requests
-    print 'EXECUTING JSONRPC QUERY VIA REQUESTS'
-    response = requests.post('http://raspbmc.local/jsonrpc', data=REQ_DATA, headers={'content-type': 'application/json'})
-    response_json = response.json()
+    def jsonrpc(request):
+        print 'EXECUTING JSONRPC QUERY VIA REQUESTS'
+        response = requests.post('http://raspbmc.local/jsonrpc', data=request, headers={'content-type': 'application/json'})
+        return response.json()
 
 print 'PROCESSING DATA... '
-movies = response_json['result']['movies']
+movies = jsonrpc(REQ_DATA)['result']['movies']
 for movie in movies:
     movie['thumbnail'] = urllib.unquote(movie['thumbnail'])
     if movie['thumbnail'].startswith('image://'):
