@@ -1,17 +1,11 @@
-EXPORT_PATH = '/tmp'
 HTML_PATH = '/net/openwrt/mnt/sda1/shared/movies/'
 
-try:
-    import xbmc
-    print 'EXPORTING DB...'
-    xbmc.executebuiltin('exportlibrary(video,false,%s)' % EXPORT_PATH, True)
-    print 'EXPORTED DB.'
-except ImportError:
-    print 'XBMC not found... continuing...'
-
-import os
-import datetime
-import xml.etree.cElementTree as ET
+REQ_DATA = '''{"jsonrpc": "2.0",
+               "method": "VideoLibrary.GetMovies",
+               "params": {"properties" : ["originaltitle", "year", "file", "thumbnail"],
+                          "sort": {"order": "ascending", "method": "title"}
+                       },
+               "id": 1}'''
 
 html = '''<html>
   <head>
@@ -29,11 +23,11 @@ html = '''<html>
   </head>
   <body>
     % for movie in movies:
-    %   if 'path' in movie and movie['path']:
+    %   if 'file' in movie and movie['file']:
     <div class="movie">
-      <a href="${movie['path']}">
+      <a href="${movie['file']}">
       <div>
-        <img src="https://raw.github.com/tuupola/jquery_lazyload/1.9.x/img/grey.gif" data-original="${movie['thumb']}" width="130" height="190">
+        <img src="https://raw.github.com/tuupola/jquery_lazyload/1.9.x/img/grey.gif" data-original="${movie['thumbnail']}" width="130" height="190">
       </div>
       <p>${movie['originaltitle']} (${movie['year']})</p>
       </a>
@@ -46,22 +40,24 @@ html = '''<html>
   </body>
 </html>'''
 
-print 'PARSING XML...'
-tree = ET.parse(os.path.join(EXPORT_PATH, 'xbmc_videodb_%s/videodb.xml' % datetime.date.today().strftime('%Y-%m-%d')))
+import os
+import urllib
+try:
+    import xbmc
+    print 'EXECUTING JSONRPC QUERY VIA XBMC'
+    response = xbmc.executeJSONRPC(REQ_DATA)
+except ImportError:
+    import requests
+    print 'EXECUTING JSONRPC QUERY VIA REQUESTS'
+    response = requests.post('http://raspbmc.local/jsonrpc', data=REQ_DATA, headers={'content-type': 'application/json'})
+    movies = response.json()['result']['movies']
 
-print 'PROCESSING DATA...'
-ATTRS = ('originaltitle', 'director', 'year', 'plot', 'basepath', 'filenameandpath', 'thumb')
-movies = []
-for movie in tree.findall('movie'):
-    data = {}
-    for attr in ATTRS:
-        data[attr] =  movie.find(attr).text
-    if data['basepath'].startswith(HTML_PATH):
-        data['path'] = data['basepath'][len(HTML_PATH):]
-    data['subs'] = None
-    movies.append(data)
-movies.sort(key=lambda movie: movie['originaltitle'])
 print 'FOUND %s MOVIES...' % len(movies)
+print 'PROCESSING DATA... '
+for movie in movies:
+    movie['thumbnail'] = urllib.unquote(movie['thumbnail'])
+    if movie['thumbnail'].startswith('image://'):
+        movie['thumbnail'] = movie['thumbnail'][8:]
 
 print 'LOADING MAKO...'
 from mako.template import Template
