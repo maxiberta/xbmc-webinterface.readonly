@@ -1,8 +1,13 @@
+import xbmc
+EXPORT_PATH = '/tmp'
+print '<<<<<<<<<<<<<<< EXPORTING DB...'
+xbmc.executebuiltin('exportlibrary(video,false,%s)' % EXPORT_PATH, True)
+print '<<<<<<<<<<<<<<< EXPORTED DB.'
+
 import os
 import datetime
 import xml.etree.cElementTree as ET
 
-EXPORT_PATH = '/net/openwrt/mnt/sda1/shared/tmp'
 HTML_PATH = '/net/openwrt/mnt/sda1/shared/movies/'
 
 html = '''<html>
@@ -27,7 +32,7 @@ html = '''<html>
       <div>
         <img src="https://raw.github.com/tuupola/jquery_lazyload/1.9.x/img/grey.gif" data-original="${movie['thumb']}" width="130" height="190">
       </div>
-      <p>${movie['title']} (${movie['year']})</p>
+      <p>${movie['originaltitle']} (${movie['year']})</p>
       </a>
       % if 'subs' in movie and movie['subs']:
       - <a href="${movie['subs']}">(subs)</a>
@@ -38,9 +43,11 @@ html = '''<html>
   </body>
 </html>'''
 
+print 'PARSING XML...'
 tree = ET.parse(os.path.join(EXPORT_PATH, 'xbmc_videodb_%s/videodb.xml' % datetime.date.today().strftime('%Y-%m-%d')))
 
-ATTRS = ('title', 'director', 'year', 'plot', 'basepath', 'filenameandpath', 'thumb')
+print 'PROCESSING DATA...'
+ATTRS = ('originaltitle', 'director', 'year', 'plot', 'basepath', 'filenameandpath', 'thumb')
 movies = []
 for movie in tree.findall('movie'):
     data = {}
@@ -50,9 +57,13 @@ for movie in tree.findall('movie'):
         data['path'] = data['basepath'][len(HTML_PATH):]
     data['subs'] = None
     movies.append(data)
+movies.sort(key=lambda movie: movie['originaltitle'])
 
-movies.sort(key=lambda movie: movie['title'])
-
+print 'LOADING MAKO...'
 from mako.template import Template
+print 'RENDERING TEMPLATE...'
 template = Template(html, output_encoding='utf-8', encoding_errors='replace')
-print template.render(movies=movies)
+out = template.render(movies=movies)
+with open(os.path.join(HTML_PATH, 'index.html'), 'w') as index_html:
+    index_html.write(out)
+print 'DONE!'
