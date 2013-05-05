@@ -11,7 +11,7 @@ html = '''<html>
   <head>
     <style type="text/css">
       body {font-family:Arial,Verdana,sans-serif; font-size:12px; font-weight:700; text-align:center;}
-      img {box-shadow: 2px 2px 12px grey; margin: 4px 0;}
+      img {margin: 4px 0;}
       .movie {float:left; width:130px; height:220px; vertical-align:top; padding:16px;}
       p {display:inline; overflow:hidden; margin:4px;}
     </style>
