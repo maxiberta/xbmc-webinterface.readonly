@@ -1,14 +1,17 @@
-import xbmc
 EXPORT_PATH = '/tmp'
-print '<<<<<<<<<<<<<<< EXPORTING DB...'
-xbmc.executebuiltin('exportlibrary(video,false,%s)' % EXPORT_PATH, True)
-print '<<<<<<<<<<<<<<< EXPORTED DB.'
+HTML_PATH = '/net/openwrt/mnt/sda1/shared/movies/'
+
+try:
+    import xbmc
+    print 'EXPORTING DB...'
+    xbmc.executebuiltin('exportlibrary(video,false,%s)' % EXPORT_PATH, True)
+    print 'EXPORTED DB.'
+except ImportError:
+    print 'XBMC not found... continuing...'
 
 import os
 import datetime
 import xml.etree.cElementTree as ET
-
-HTML_PATH = '/net/openwrt/mnt/sda1/shared/movies/'
 
 html = '''<html>
   <head>
@@ -58,6 +61,7 @@ for movie in tree.findall('movie'):
     data['subs'] = None
     movies.append(data)
 movies.sort(key=lambda movie: movie['originaltitle'])
+print 'FOUND %s MOVIES...' % len(movies)
 
 print 'LOADING MAKO...'
 from mako.template import Template
