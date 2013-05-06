@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <style type="text/css">
+      body {font-family:Arial,Verdana,sans-serif; font-size:12px; font-weight:700; text-align:center;}
+      img {margin: 4px 0; width:130px; height:190px;}
+      .movie {float:left; width:130px; height:220px; vertical-align:top; padding:16px;}
+      p {display:inline; overflow:hidden; margin:4px;}
+    </style>
+    <script src="/addons/webinterface.default/js/jquery-1.8.2.min.js?2.1.0"></script>
+    <script src="/addons/webinterface.default/js/json2.js?2.1.0"></script>
+    <script src="/addons/webinterface.default/js/xbmc.core.js?2.1.0"></script>
+    <script src="/addons/webinterface.default/js/xbmc.rpc.js?2.1.0"></script>
+
+    <script src="js/jquery.lazyload.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+
+    function getThumbnailPath(thumbnail) {
+        return thumbnail ? ('/image/' + encodeURI(thumbnail)) : xbmc.core.DEFAULT_ALBUM_COVER;
+    }
+    
+    function getFilePath(vfspath) {
+        return vfspath ? ('/vfs/' + encodeURI(vfspath)) : "";
+    }
+
+    $(function() {
+
+    xbmc.rpc.request({
+      'method': 'VideoLibrary.GetMovies',
+      "params": {"properties": ["originaltitle", "year", "file", "thumbnail"],
+                 "sort": {"order": "ascending", "method": "title"}},
+      'success': function(data) {
+        console.log(data);
+        if (data && data.result && data.result.movies) {
+          $.each($(data.result.movies), function(i, movie) {
+            var a = $('<a>');
+            a.attr('href', getFilePath(movie.file));
+            var img = $('<img src="images/grey.gif">');
+            img.attr('data-original', getThumbnailPath(movie.thumbnail));
+            var p = $('<p>');
+            p.text(movie.originaltitle + ' (' + movie.year + ')');
+            var div = $('<div>');
+            div.addClass('movie');
+            div.append(img);
+            div.append(p);
+            a.append(div);
+            $("#content").append(a);
+          });
+        }
+        $("img").lazyload({effect: "fadeIn"});
+      },
+      'error': function(data, error) {
+        xbmc.core.displayCommunicationError();
+        setTimeout(jQuery.proxy(this.updateState, this), 2000);
+      }
+    });
+
+      });
+    </script>
+  </head>
+  <body>
+    <div id="body">
+      <div id="content"></div>
+    </div>
+  </body>
+</html>

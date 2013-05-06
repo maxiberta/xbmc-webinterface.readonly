@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="webinterface.readonly"
+       name="Read-Only Web Interface"
+       version="0.0.1"
+       provider-name="Maximiliano Bertacchini">
+    <requires>
+        <import addon="webinterface.default" version="2.1.7"/>
+    </requires>
+    <extension point="xbmc.gui.webinterface"/>
+    <extension point="xbmc.addon.metadata">
+        <language>en</language>
+        <platform>all</platform>
+        <summary>Builds a web page with download links to movies in the database.</summary>
+        <description>Builds a web page with download links to movies in the database.</description>
+    </extension>
+</addon>
