@@ -1,13 +1,24 @@
 <html>
   <head>
     <meta charset='utf-8'>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
     <style type="text/css">
       body {font-family:Arial,Verdana,sans-serif; font-size:12px; font-weight:700; text-align:center;}
       img {margin: 4px 0; width:130px; height:190px;}
       .movie {float:left; width:130px; height:220px; vertical-align:top; padding:16px;}
       p {display:inline; overflow:hidden; margin:4px;}
+      .ui-widget-overlay {background: black; opacity: .8;}
+      .ui-widget-header {background: none; border: none;}
+      #dialog-parent {position:fixed; top:50%; left:50%;}
+      #movie-detail {display: none; overflow: hidden; margin-top: -24px;}
+      #movie-detail > div {float: left;}
+      #movie-detail img {margin: 4px 0; width:260px; height:380px;}
     </style>
+
+    <!--script src="http://code.jquery.com/jquery-1.9.1.js"></script-->
     <script src="/addons/webinterface.default/js/jquery-1.8.2.min.js?2.1.0"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+
     <script src="/addons/webinterface.default/js/json2.js?2.1.0"></script>
     <script src="/addons/webinterface.default/js/xbmc.core.js?2.1.0"></script>
     <script src="/addons/webinterface.default/js/xbmc.rpc.js?2.1.0"></script>
@@ -16,9 +27,9 @@
     <script type="text/javascript" charset="utf-8">
 
     function getThumbnailPath(thumbnail) {
-        return thumbnail ? ('/image/' + encodeURI(thumbnail)) : xbmc.core.DEFAULT_ALBUM_COVER;
+        return thumbnail ? ('/image/' + encodeURI(thumbnail)) : "";
     }
-    
+
     function getFilePath(vfspath) {
         return vfspath ? ('/vfs/' + encodeURI(vfspath)) : "";
     }
@@ -27,27 +38,47 @@
 
     xbmc.rpc.request({
       'method': 'VideoLibrary.GetMovies',
-      "params": {"properties": ["originaltitle", "year", "file", "thumbnail"],
+      "params": {"properties": ["title", "originaltitle", "year", "file", "thumbnail"],
                  "sort": {"order": "ascending", "method": "title"}},
       'success': function(data) {
-        console.log(data);
         if (data && data.result && data.result.movies) {
-          $.each($(data.result.movies), function(i, movie) {
+
+          libraryContainer = $('<div>');
+          libraryContainer.attr('id', 'movieLibraryContainer').addClass('contentContainer');
+          $('#content').append(libraryContainer);
+
+          $.each($(data.result.movies), function(i, item) {
             var a = $('<a>');
-            a.attr('href', getFilePath(movie.file));
+            a.attr('href', getFilePath(item.file));
             var img = $('<img src="images/grey.gif">');
-            img.attr('data-original', getThumbnailPath(movie.thumbnail));
+            img.attr('data-original', getThumbnailPath(item.thumbnail));
             var p = $('<p>');
-            p.text(movie.originaltitle + ' (' + movie.year + ')');
+            p.text(item.originaltitle + ' (' + item.year + ')');
             var div = $('<div>');
             div.addClass('movie');
             div.append(img);
-            div.append(p);
-            a.append(div);
-            $("#content").append(a);
+            a.append(p);
+            div.append(a);
+            $("#content").append(div);
+
+            img.click(function(event) {
+                var popup = $('#movie-detail');
+                $('#poster').attr('src', $(event.target).attr('src'));
+                popup.dialog({ modal: true,
+                               resizable: false,
+                               draggable: false,
+                               width: 600,
+                               height: 420,
+                               position: {my:"center", at:"center", of:"#dialog-parent"},
+                               create: function(event, ui) {$(event.target).parent().css('position', 'fixed');},
+                });
+            });
+
           });
+
         }
         $("img").lazyload({effect: "fadeIn"});
+        $("body").trigger('scroll');
       },
       'error': function(data, error) {
         xbmc.core.displayCommunicationError();
@@ -59,6 +90,19 @@
     </script>
   </head>
   <body>
+    <div id="dialog-parent">
+      <div id="movie-detail">
+        <div id"poster-container"><img id="poster" src=""/></div>
+        <div id="data">
+          <dl>
+            <dt>Title</dt><dd></dd>
+            <dt>Year</dt><dd></dd>
+            <dt>Director</dt><dd></dd>
+            <dt>Plot</dt><dd></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
     <div id="body">
       <div id="content"></div>
     </div>
