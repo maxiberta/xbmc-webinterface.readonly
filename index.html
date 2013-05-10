@@ -10,9 +10,12 @@
       .ui-widget-overlay {background: black; opacity: .8;}
       .ui-widget-header {background: none; border: none;}
       #dialog-parent {position:fixed; top:50%; left:50%;}
-      #movie-detail {display: none; overflow: hidden; margin-top: -24px;}
-      #movie-detail > div {float: left;}
-      #movie-detail img {margin: 4px 0; width:260px; height:380px;}
+      #movie-popup {display: none; overflow: hidden; margin-top: -24px; z-index: -1;}
+      #movie-popup > div {float: left; font-size: 1.2em; line-height: 1.5em;}
+      #movie-popup img {margin: 0; width:260px; height:380px;}
+      #movie-detail {text-align: left; padding: 0 1em; width: 400px;}
+      #movie-detail a {position: absolute; bottom: 1em; right: 1em;}
+      dt {float: left; width: 100px; text-transform: capitalize;}
     </style>
 
     <!--script src="http://code.jquery.com/jquery-1.9.1.js"></script-->
@@ -34,11 +37,12 @@
         return vfspath ? ('/vfs/' + encodeURI(vfspath)) : "";
     }
 
+    var movies = {};
     $(function() {
 
     xbmc.rpc.request({
       'method': 'VideoLibrary.GetMovies',
-      "params": {"properties": ["title", "originaltitle", "year", "file", "thumbnail"],
+      "params": {"properties": ["title", "originaltitle", "year", "file", "thumbnail", "country", "plotoutline", "genre", "resume", "runtime"],
                  "sort": {"order": "ascending", "method": "title"}},
       'success': function(data) {
         if (data && data.result && data.result.movies) {
@@ -48,26 +52,35 @@
           $('#content').append(libraryContainer);
 
           $.each($(data.result.movies), function(i, item) {
-            var a = $('<a>');
-            a.attr('href', getFilePath(item.file));
-            var img = $('<img src="images/grey.gif">');
-            img.attr('data-original', getThumbnailPath(item.thumbnail));
-            var p = $('<p>');
-            p.text(item.originaltitle + ' (' + item.year + ')');
-            var div = $('<div>');
-            div.addClass('movie');
-            div.append(img);
-            a.append(p);
-            div.append(a);
+            item.runtime = item.runtime/ 60;
+            movies[item.movieid] = item;
+            var p = $('<p>').text(item.originaltitle + ' (' + item.year + ')');
+            var a = $('<a>').attr('href', getFilePath(item.file)).append(p);
+            var img = $('<img src="images/grey.gif">').attr('data-original', getThumbnailPath(item.thumbnail));
+            var div = $('<div>').attr('id', item.movieid).addClass('movie').append(img).append(a);
             $("#content").append(div);
 
             img.click(function(event) {
-                var popup = $('#movie-detail');
-                $('#poster').attr('src', $(event.target).attr('src'));
+                var popup = $('#movie-popup');
+                var movieid = $(event.target).parent().attr('id');
+                var movie = movies[movieid];
+                $('#poster').attr('src', getThumbnailPath(movie.thumbnail));
+                var details = $('#movie-detail > dl').empty();
+                $.each(["title", "year", "country", "genre", "runtime", "plotoutline"], function(i, value) {
+                    var dt = $("<dt>").text(value + ': ');
+                    var dd = $("<dd>").text($.isArray(movie[value])? movie[value].join(', '): movie[value]);
+                    if(dd.text()) {
+                        details.append(dt).append(dd);
+                    }
+                });
+                var download = $("<button>").text("Download");
+                var a = $("<a>").attr("href", getFilePath(movie.file)).append(download);
+                details.append(a);
+
                 popup.dialog({ modal: true,
                                resizable: false,
                                draggable: false,
-                               width: 600,
+                               width: 720,
                                height: 420,
                                position: {my:"center", at:"center", of:"#dialog-parent"},
                                create: function(event, ui) {$(event.target).parent().css('position', 'fixed');},
@@ -91,15 +104,10 @@
   </head>
   <body>
     <div id="dialog-parent">
-      <div id="movie-detail">
+      <div id="movie-popup">
         <div id"poster-container"><img id="poster" src=""/></div>
-        <div id="data">
-          <dl>
-            <dt>Title</dt><dd></dd>
-            <dt>Year</dt><dd></dd>
-            <dt>Director</dt><dd></dd>
-            <dt>Plot</dt><dd></dd>
-          </dl>
+        <div id="movie-detail">
+          <dl></dl>
         </div>
       </div>
     </div>
