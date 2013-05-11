@@ -14,8 +14,11 @@
       #movie-popup > div {float: left; font-size: 1.2em; line-height: 1.5em;}
       #movie-popup img {margin: 0; width:260px; height:380px;}
       #movie-detail {text-align: left; padding: 0 1em; width: 400px;}
-      #movie-detail a {position: absolute; bottom: 1em; right: 1em;}
+      #movie-detail a {position: absolute; bottom: .2em; right: .2em;}
+      dl {margin: 0;}
       dt {float: left; width: 100px; text-transform: capitalize;}
+      dd {margin-left: 100px;}
+      dd.plot {line-height: 1em; padding-top: .25em;}
     </style>
 
     <!--script src="http://code.jquery.com/jquery-1.9.1.js"></script-->
@@ -42,7 +45,7 @@
 
     xbmc.rpc.request({
       'method': 'VideoLibrary.GetMovies',
-      "params": {"properties": ["title", "originaltitle", "year", "file", "thumbnail", "country", "plotoutline", "genre", "resume", "runtime"],
+      "params": {"properties": ["title", "originaltitle", "year", "file", "thumbnail", "country", "plot", "genre", "resume", "runtime"],
                  "sort": {"order": "ascending", "method": "title"}},
       'success': function(data) {
         if (data && data.result && data.result.movies) {
@@ -52,7 +55,7 @@
           $('#content').append(libraryContainer);
 
           $.each($(data.result.movies), function(i, item) {
-            item.runtime = item.runtime/ 60;
+            item.runtime = item.runtime / 60 + ' minutes';
             movies[item.movieid] = item;
             var p = $('<p>').text(item.originaltitle + ' (' + item.year + ')');
             var a = $('<a>').attr('href', getFilePath(item.file)).append(p);
@@ -66,9 +69,9 @@
                 var movie = movies[movieid];
                 $('#poster').attr('src', getThumbnailPath(movie.thumbnail));
                 var details = $('#movie-detail > dl').empty();
-                $.each(["title", "year", "country", "genre", "runtime", "plotoutline"], function(i, value) {
+                $.each(["title", "year", "country", "genre", "runtime", "plot"], function(i, value) {
                     var dt = $("<dt>").text(value + ': ');
-                    var dd = $("<dd>").text($.isArray(movie[value])? movie[value].join(', '): movie[value]);
+                    var dd = $("<dd>").addClass(value).text($.isArray(movie[value])? movie[value].join(', '): movie[value]);
                     if(dd.text()) {
                         details.append(dt).append(dd);
                     }
@@ -83,8 +86,11 @@
                                width: 720,
                                height: 420,
                                position: {my:"center", at:"center", of:"#dialog-parent"},
+                               show: {effect: "fade", duration: 200},
                                create: function(event, ui) {$(event.target).parent().css('position', 'fixed');},
+                               open: function(){ $('.ui-widget-overlay').hide().fadeIn(200); },
                 });
+                $(".ui-widget-overlay").click(function() { popup.dialog("close"); });
             });
 
           });
