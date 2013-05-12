@@ -8,9 +8,12 @@
       .movie {float:left; width:130px; height:220px; vertical-align:top; padding:16px;}
       p {display:inline; overflow:hidden; margin:4px;}
       .ui-widget-overlay {background: black; opacity: .8;}
-      .ui-widget-header {background: none; border: none;}
+      .ui-dialog {box-shadow: 0 0 40px black;}
+      .ui-dialog .ui-dialog-titlebar {padding: 0; border: none;}
+      .ui-dialog .ui-dialog-titlebar-close {margin: 0;}
+      .ui-dialog-title {display: none;}
       #dialog-parent {position:fixed; top:50%; left:50%;}
-      #movie-popup {display: none; overflow: hidden; margin-top: -24px; z-index: -1;}
+      #movie-popup {display: none; overflow: hidden; padding: 5px; z-index: -1;}
       #movie-popup > div {float: left; font-size: 1.2em; line-height: 1.5em;}
       #movie-popup img {margin: 0; width:260px; height:380px;}
       #movie-detail {text-align: left; padding: 0 1em; width: 400px;}
@@ -83,7 +86,6 @@
                                resizable: false,
                                draggable: false,
                                width: 720,
-                               height: 420,
                                position: {my:"center", at:"center", of:"#dialog-parent"},
                                show: {effect: "fade", duration: 200},
                                create: function(event, ui) {$(event.target).parent().css('position', 'fixed');},
