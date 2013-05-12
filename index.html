@@ -47,7 +47,7 @@
 
     xbmc.rpc.request({
       'method': 'VideoLibrary.GetMovies',
-      "params": {"properties": ["title", "originaltitle", "year", "file", "thumbnail", "country", "plot", "genre", "resume", "runtime"],
+      "params": {"properties": ["title", "originaltitle", "year", "director", "file", "thumbnail", "country", "plot", "genre", "resume", "runtime"],
                  "sort": {"order": "ascending", "method": "title"}},
       'success': function(data) {
         if (data && data.result && data.result.movies) {
@@ -71,7 +71,7 @@
                 var movie = movies[movieid];
                 $('#poster').attr('src', getThumbnailPath(movie.thumbnail));
                 var details = $('#movie-detail > dl').empty();
-                $.each(["title", "year", "country", "genre", "runtime", "plot"], function(i, value) {
+                $.each(["title", "director", "year", "country", "genre", "runtime", "plot"], function(i, value) {
                     var dt = $("<dt>").text(value + ': ');
                     var dd = $("<dd>").addClass(value).text($.isArray(movie[value])? movie[value].join(', '): movie[value]);
                     if(dd.text()) {
