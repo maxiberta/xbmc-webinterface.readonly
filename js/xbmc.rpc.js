@@ -26,15 +26,15 @@
         'default_options': {
             'contentType': 'application/json',
             'dataType': 'json',
-            'type': 'POST',
+            'type': 'GET',
             'success': function () {
                 $('#spinner').hide();
             }
         },
         'request': function (options) {
             var request_options = jQuery.extend({}, this.default_options, options);
-            request_options.url = xbmc.core.JSON_RPC + '?' + options.method;
-            request_options.data = JSON.stringify({
+            request_options.url = xbmc.core.JSON_RPC + '?request=';
+            request_options.url += JSON.stringify({
                 'jsonrpc': '2.0',
                 'method': options.method,
                 'id': 1,
