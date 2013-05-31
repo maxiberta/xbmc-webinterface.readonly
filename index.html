@@ -61,7 +61,7 @@
             movies[item.movieid] = item;
             var p = $('<p>').text(item.originaltitle + ' (' + item.year + ')');
             var a = $('<a>').attr('href', getFilePath(item.file)).append(p);
-            var img = $('<img src="images/grey.gif">').attr('data-original', getThumbnailPath(item.thumbnail));
+            var img = $('<img src="images/grey.gif" style="cursor:pointer">').attr('data-original', getThumbnailPath(item.thumbnail));
             var div = $('<div>').attr('id', item.movieid).addClass('movie').append(img).append(a);
             $("#content").append(div);
 
