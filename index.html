@@ -49,19 +49,14 @@
     }
 
     var movies = {};
-    $(function() {
 
-    xbmc.rpc.request({
+    function getMovies(sort_method, sort_order) {
+      xbmc.rpc.request({
       'method': 'VideoLibrary.GetMovies',
       "params": {"properties": ["title", "originaltitle", "year", "director", "file", "thumbnail", "country", "plot", "genre", "resume", "runtime"],
-                 "sort": {"order": "ascending", "method": "title"}},
+                 "sort": {"order": sort_order, "method": sort_method}},
       'success': function(data) {
         if (data && data.result && data.result.movies) {
-
-          libraryContainer = $('<div>');
-          libraryContainer.attr('id', 'movieLibraryContainer').addClass('contentContainer');
-          $('#content').append(libraryContainer);
-
           $.each($(data.result.movies), function(i, item) {
             item.runtime = item.runtime / 60 + ' minutes';
             movies[item.movieid] = item;
@@ -103,7 +98,7 @@
           });
 
         }
-        $("img").lazyload({effect: "fadeIn"});
+        $("img").lazyload();
         $("body").trigger('scroll');
       },
       'error': function(data, error) {
@@ -111,8 +106,21 @@
         setTimeout(jQuery.proxy(this.updateState, this), 2000);
       }
     });
+    };
 
+    $(function() {
+      $("#sort-method").change(function() {
+        $("#content").empty();
+        getMovies($(this).val(), $('#sort-order').val());
       });
+      $("#sort-order").change(function() {
+        var children = $("#content").children();
+        $("#content").append(children.get().reverse());
+        $("img").lazyload();
+        $("body").trigger('scroll');
+      });
+      $("#sort-method").change();
+    });
     </script>
   </head>
   <body>
@@ -125,6 +133,15 @@
       </div>
     </div>
     <div id="body">
+      Order by:
+      <select id="sort-method">
+        <option value="title" selected="selected">Title</option>
+        <option value="year">Year</option>
+      </select>
+      <select id="sort-order">
+        <option value="ascending" selected="selected">Ascending</option>
+        <option value="descending">Descending</option>
+      </select>
       <div id="content"></div>
     </div>
   </body>
