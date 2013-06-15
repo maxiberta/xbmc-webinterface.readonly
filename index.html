@@ -53,7 +53,7 @@
     function getMovies(sort_method, sort_order) {
       xbmc.rpc.request({
       'method': 'VideoLibrary.GetMovies',
-      "params": {"properties": ["title", "originaltitle", "year", "director", "file", "thumbnail", "country", "plot", "genre", "resume", "runtime"],
+      "params": {"properties": ["title", "originaltitle", "year", "director", "file", "thumbnail", "country", "plot", "genre", "resume", "runtime", "dateadded"],
                  "sort": {"order": sort_order, "method": sort_method}},
       'success': function(data) {
         if (data && data.result && data.result.movies) {
@@ -137,6 +137,7 @@
       <select id="sort-method">
         <option value="title" selected="selected">Title</option>
         <option value="year">Year</option>
+        <option value="dateadded">Date added</option>
       </select>
       <select id="sort-order">
         <option value="ascending" selected="selected">Ascending</option>
